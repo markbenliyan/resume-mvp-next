@@ -16,12 +16,10 @@
   }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+#resume [contentEditable="true"]:focus {
+  outline: 2px dashed royalblue;
+}
+
+.hiddenSection {
+  opacity: 0.3;
 }
