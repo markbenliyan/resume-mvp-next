@@ -170,7 +170,6 @@ const Resume = ({ editable = false, resumeOnly = false }) => {
   return (
     <>
       {!resumeOnly && editable && <HoveringToolbar {...toolbarPos} activeIndices={activeItemIndices} />}
-      {!resumeOnly && <DownloadButton />}
       <div id="canvas" style={style.canvas}>
         <div id="resume" style={style.resume}>
           <div id="headerSection" style={style.headerSection}>
