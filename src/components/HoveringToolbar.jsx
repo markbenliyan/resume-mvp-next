@@ -27,7 +27,9 @@ const HoveringToolbar = ({ x, y, activeIndices }) => {
 
   const handleMoveUp = () => {
     if (descriptionIndex !== undefined) {
-      if (descriptionIndex > 0) moveHandler(descriptionIndex, descriptionIndex - 1, sectionIndex, subsectionIndex);
+      if (descriptionIndex > 0) {
+        moveHandler(descriptionIndex, descriptionIndex - 1, sectionIndex, subsectionIndex);
+      }
     } else if (subsectionIndex !== undefined) {
       if (subsectionIndex > 0) moveHandler(subsectionIndex, subsectionIndex - 1, sectionIndex);
     } else if (sectionIndex !== undefined) {

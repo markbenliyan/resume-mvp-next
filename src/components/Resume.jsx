@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import useStore from "../store";
 import HoveringToolbar from "./HoveringToolbar";
-import DownloadButton from "./DownloadButton";
 
 
 const Resume = ({ editable = false, resumeOnly = false }) => {
-  const customFormat = useStore((state) => state.customFormat);
-  const resume = useStore((state) => state.resume);
+  const { resume, customFormat, updateTitleTextLeft, updateText } = useStore();
+
   const style = {
     canvas: {
       width: '816px', // 8.5 inches at 96 DPI
@@ -145,26 +144,30 @@ const Resume = ({ editable = false, resumeOnly = false }) => {
 
   const [activeItemIndices, setActiveItemIndices] = useState({ sectionIndex: null, subsectionIndex: null, descriptionIndex: null });
 
-  function handleInput(e, ...path) {
-    const value = e.target.textContent;
-    console.log('value ', value)
-    console.log('path ', path)
+  function handleBlur(e, operation, sectionIndex = undefined, subsectionIndex = undefined, descriptionIndex = undefined) {
+    updateText(operation, e.target.textContent, sectionIndex, subsectionIndex, descriptionIndex);
   }
 
   const [toolbarPos, setToolbarPos] = useState({ x: 0, y: 0 });
 
   const handleMouseEnter = (sectionIndex, subsectionIndex, descriptionIndex) => (e) => {
-    const headerRect = e.currentTarget.getBoundingClientRect();
-    const resumeRect = document.getElementById('canvas').getBoundingClientRect();
+    const currentRect = e.currentTarget.getBoundingClientRect();
+    // const resumeRect = document.getElementById('canvas').getBoundingClientRect();
 
     setToolbarPos({
-      x: resumeRect.left + 15,
-      y: headerRect.top + headerRect.height / 2 - 20
+      x: currentRect.left,
+      y: currentRect.top + currentRect.height / 2 - 20
     });
 
     setActiveItemIndices({ sectionIndex, subsectionIndex, descriptionIndex });
+    e.currentTarget.classList.add('bg-gray-100');
   };
 
+  const handleMouseLeave = () => (e) => {
+    // Remove a class from the current target
+    console.log('removing class')
+    e.currentTarget.classList.remove('bg-gray-100');
+  };
 
 
   return (
@@ -174,18 +177,24 @@ const Resume = ({ editable = false, resumeOnly = false }) => {
         <div id="resume" style={style.resume}>
           <div id="headerSection" style={style.headerSection}>
             <h1 id="headerName" style={style.headerName}>
-              <span id="firstName" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'firstName')} style={style.headerFirstName}>
+              <span id="firstName" contentEditable={editable} suppressContentEditableWarning={true}
+                onBlur={(e) => handleBlur(e, 'firstName')}
+                style={style.headerFirstName}>
                 {resume.firstName}
               </span>
 
-              <span id="lastName" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'lastName')} style={style.headerLastName}>
+              <span id="lastName" contentEditable={editable} suppressContentEditableWarning={true}
+                onBlur={(e) => handleBlur(e, 'lastName')}
+                style={style.headerLastName}>
                 {' ' + resume.lastName}
               </span>
             </h1>
             <div id="headerContacts" style={style.headerContacts}>
               {resume.contactInfo.map((info, index) => (
                 <div className="contactContainer" style={{ display: 'flex', alignItems: 'center' }} key={index}>
-                  <p className="headerContactsText" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'contactInfo', index)} style={style.headerContactsText}>
+                  <p className="headerContactsText" contentEditable={editable} suppressContentEditableWarning={true}
+                    // onBlur={(e) => handleBlur(e, 'contactInfo', index)} 
+                    style={style.headerContactsText}>
                     {info}
                   </p>
                   {index < resume.contactInfo.length - 1 &&
@@ -198,27 +207,27 @@ const Resume = ({ editable = false, resumeOnly = false }) => {
           {resume.sections.map((section, sectionIndex) =>
             section.hidden ? null : (
               <div className="section" id={`${section.type.toLowerCase()}Section`} style={style.section} key={sectionIndex}>
-                <h2 onMouseEnter={handleMouseEnter(sectionIndex)} className="sectionTitle" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'sections', sectionIndex, 'name')} style={style.sectionTitle}>
+                <h2 onMouseEnter={handleMouseEnter(sectionIndex)} onMouseLeave={handleMouseLeave()} className="sectionTitle" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'name', sectionIndex)} style={style.sectionTitle}>
                   {section.name}
                 </h2>
                 {section.subSections.map((subSection, subSectionIndex) =>
                   subSection.hidden ? null : (
                     <div className="subsection" style={style.subsection} key={subSectionIndex}>
                       {section.type !== 'SKILLS' &&
-                        <div onMouseEnter={handleMouseEnter(sectionIndex, subSectionIndex)}>
+                        <div onMouseEnter={handleMouseEnter(sectionIndex, subSectionIndex)} onMouseLeave={handleMouseLeave()}>
                           <div className="subsectionTitle" style={style.subsectionTitle}>
-                            <p className="subsectionTitleText1" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'sections', sectionIndex, 'subSections', subSectionIndex, 'titleTextLeft')} style={style.subsectionTitleText1}>
+                            <p className="subsectionTitleText1" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'titleTextLeft', sectionIndex, subSectionIndex)} style={style.subsectionTitleText1}>
                               {subSection.titleTextLeft}
                             </p>
-                            <p className="subsectionTitleText2" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'sections', sectionIndex, 'subSections', subSectionIndex, 'titleTextRight')} style={style.subsectionTitleText2}>
+                            <p className="subsectionTitleText2" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'titleTextRight', sectionIndex, subSectionIndex)} style={style.subsectionTitleText2}>
                               {subSection.titleTextRight}
                             </p>
                           </div>
                           <div className="subsectionSubtitle" style={style.subsectionSubtitle}>
-                            <p className="subsectionSubtitleText1" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'sections', sectionIndex, 'subSections', subSectionIndex, 'subtitleTextLeft')} style={style.subsectionSubtitleText1}>
+                            <p className="subsectionSubtitleText1" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'subtitleTextLeft', sectionIndex, subSectionIndex)} style={style.subsectionSubtitleText1}>
                               {subSection.subtitleTextLeft}
                             </p>
-                            <p className="subsectionSubtitleText2" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'sections', sectionIndex, 'subSections', subSectionIndex, 'subtitleTextRight')} style={style.subsectionSubtitleText2}>
+                            <p className="subsectionSubtitleText2" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'subtitleTextRight', sectionIndex, subSectionIndex)} style={style.subsectionSubtitleText2}>
                               {subSection.subtitleTextRight}
                             </p>
                           </div>
@@ -228,28 +237,30 @@ const Resume = ({ editable = false, resumeOnly = false }) => {
                         {subSection.descriptions.map((desc, descriptionIndex) =>
                           desc.hidden ? null : desc.type === "SPLIT" ? (
                             <div className="subsectionBodySplit" style={style.subsectionBodySplit}>
-                              <p className="subsectionBodySplitText1" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'sections', sectionIndex, 'subSections', subSectionIndex, 'descriptions', descriptionIndex, 'valueLeft')} style={style.subsectionBodySplitText1}>
+                              <p className="subsectionBodySplitText1" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'valueLeft', sectionIndex, subSectionIndex, descriptionIndex)} style={style.subsectionBodySplitText1}>
                                 {desc.valueLeft}
                               </p>
-                              <p className="subsectionBodySplitText2" contentEditable={editable} suppressContentEditableWarning={true} onInput={(e) => handleInput(e, 'sections', sectionIndex, 'subSections', subSectionIndex, 'descriptions', descriptionIndex, 'valueRight')} style={style.subsectionBodySplitText2}>
+                              <p className="subsectionBodySplitText2" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'valueRight', sectionIndex, subSectionIndex, descriptionIndex)} style={style.subsectionBodySplitText2}>
                                 {desc.valueRight}
                               </p>
                             </div>
                           ) : (
-                            <ul className="subsectionBodyBullet" style={style.subsectionBodyBullet}>
-                              <li
-                                className="subsectionBodyBulletText"
-                                contentEditable={editable} suppressContentEditableWarning={true}
-                                onInput={(e) => handleInput(e, 'sections', sectionIndex, 'subSections', subSectionIndex, 'descriptions', descriptionIndex, 'value')}
-                                style={{
-                                  ...style.subsectionBodyBulletText,
-                                  marginTop: descriptionIndex !== 0 ? customFormat.subsectionBodyBulletMarginTop : '0px',
-                                }}
-                                onMouseEnter={handleMouseEnter(sectionIndex, subSectionIndex, descriptionIndex)}
-                              >
-                                {desc.value}
-                              </li>
-                            </ul>
+                            <div onMouseEnter={handleMouseEnter(sectionIndex, subSectionIndex, descriptionIndex)}
+                              onMouseLeave={handleMouseLeave()}>
+                              <ul className="subsectionBodyBullet" style={style.subsectionBodyBullet}>
+                                <li
+                                  className="subsectionBodyBulletText"
+                                  contentEditable={editable} suppressContentEditableWarning={true}
+                                  onBlur={(e) => handleBlur(e, 'value', sectionIndex, subSectionIndex, descriptionIndex)}
+                                  style={{
+                                    ...style.subsectionBodyBulletText,
+                                    marginTop: descriptionIndex !== 0 ? customFormat.subsectionBodyBulletMarginTop : '0px',
+                                  }}
+                                >
+                                  {desc.value}
+                                </li>
+                              </ul>
+                            </div>
                           )
                         )}
                       </div>

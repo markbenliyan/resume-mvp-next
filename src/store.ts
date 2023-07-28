@@ -65,12 +65,7 @@ interface Store {
   updateSection: (sectionIndex: number, section: Section) => void;
   updateSubSection: (sectionIndex: number, subSectionIndex: number, subSection: SubSection) => void;
   updateDescription: (sectionIndex: number, subSectionIndex: number, descriptionIndex: number, description: Description) => void;
-  updateBulletDescription: (sectionIndex: number, subSectionIndex: number, descriptionIndex: number, newValue: string) => void;
-  updateSplitDescription: (sectionIndex: number, subSectionIndex: number, descriptionIndex: number, newValueLeft: string, newValueRight: string) => void;
-  updateTitleTextLeft: (sectionIndex: number, subSectionIndex: number, titleTextLeft: string) => void;
-  updateTitleTextRight: (sectionIndex: number, subSectionIndex: number, titleTextRight: string) => void;
-  updateSubtitleTextLeft: (sectionIndex: number, subSectionIndex: number, subtitleTextLeft: string) => void;
-  updateSubtitleTextRight: (sectionIndex: number, subSectionIndex: number, subtitleTextRight: string) => void;
+  updateText: (operation: string, newValue: string, sectionIndex: number, subSectionIndex: number, descriptionIndex:number) => void;
   toggleSectionHidden: (sectionIndex: number) => void;
   addHandler: (sectionIndex: number, subSectionIndex?: number,  descriptionIndex?: number) => void;
   deleteHandler: (sectionIndex: number, subSectionIndex?: number, descriptionIndex?: number) => void;
@@ -319,47 +314,42 @@ const useStore = create<Store>((set) => ({
       draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex] = description;
     })
   ),
-  updateBulletDescription: (sectionIndex, subSectionIndex, descriptionIndex, newValue) => set((state) => 
+  updateText: (operation, newValue, sectionIndex?, subSectionIndex?, descriptionIndex?) => set((state) =>
     produce(state, draft => {
-      const targetDescription = draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex];
-
-      if (targetDescription.type === "BULLET") {
-        targetDescription.value = newValue;
+      if (operation === 'firstName') {
+        draft.resume.firstName = newValue;
+      } else if (operation === 'lastName') {
+        draft.resume.lastName = newValue;
+      } else if (descriptionIndex !== undefined) {
+        // If descriptionIndex is provided, we are updating a description-level field
+        const targetDescription = draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex];
+        
+        if (targetDescription.type === "BULLET") {
+          targetDescription.value = newValue;
+        } else if (targetDescription.type === "SPLIT") {
+          if (operation === 'valueLeft') {
+            targetDescription.valueLeft = newValue;
+          } else if (operation === 'valueRight') {
+            targetDescription.valueRight = newValue;
+          }
+        }
+      } else if (subSectionIndex !== undefined) {
+        // If subSectionIndex is provided, we are updating a subsection-level field
+        const targetSubsection = draft.resume.sections[sectionIndex].subSections[subSectionIndex];
+        if (operation === 'titleTextLeft') {
+          targetSubsection.titleTextLeft = newValue;
+        } else if (operation === 'titleTextRight') {
+          targetSubsection.titleTextRight = newValue;
+        } else if (operation === 'subtitleTextLeft') {
+          targetSubsection.subtitleTextLeft = newValue;
+        } else if (operation === 'subtitleTextRight') {
+          targetSubsection.subtitleTextRight = newValue;
+        }
       } else {
-        console.error("Tried to update a bullet description, but the type was not BULLET.");
+        // If only sectionIndex is provided, we are updating a section-level field
+        const targetSection = draft.resume.sections[sectionIndex];
+        targetSection.name = newValue;
       }
-    })
-  ),
-  updateSplitDescription: (sectionIndex, subSectionIndex, descriptionIndex, newValueLeft, newValueRight) => set((state) => 
-    produce(state, draft => {
-      const targetDescription = draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex];
-
-      if (targetDescription.type === "SPLIT") {
-        targetDescription.valueLeft = newValueLeft;
-        targetDescription.valueRight = newValueRight;
-      } else {
-        console.error("Tried to update a SPLIT description, but the type was not SPLIT.");
-      }
-    })
-  ),
-  updateTitleTextLeft: (sectionIndex, subSectionIndex, titleTextLeft) => set((state) =>
-    produce(state, draft => {
-      draft.resume.sections[sectionIndex].subSections[subSectionIndex].titleTextLeft = titleTextLeft;
-    })
-  ),
-  updateTitleTextRight: (sectionIndex, subSectionIndex, titleTextRight) => set((state) =>
-    produce(state, draft => {
-      draft.resume.sections[sectionIndex].subSections[subSectionIndex].titleTextRight = titleTextRight;
-    })
-  ),
-  updateSubtitleTextLeft: (sectionIndex, subSectionIndex, subtitleTextLeft) => set((state) =>
-    produce(state, draft => {
-      draft.resume.sections[sectionIndex].subSections[subSectionIndex].subtitleTextLeft = subtitleTextLeft;
-    })
-  ),
-  updateSubtitleTextRight: (sectionIndex, subSectionIndex, subtitleTextRight) => set((state) =>
-    produce(state, draft => {
-      draft.resume.sections[sectionIndex].subSections[subSectionIndex].subtitleTextRight = subtitleTextRight;
     })
   ),
   toggleSectionHidden: (sectionIndex) => set((state) => 
