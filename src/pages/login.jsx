@@ -18,7 +18,6 @@ export default function Login() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log('User logged in: ', user);
 
       // Navigate to home page
       router.push('/dashboard');
@@ -35,10 +34,8 @@ export default function Login() {
 
       if (userCredential.credential) {
         const accessToken = userCredential.credential.accessToken;
-        console.log('Access Token: ', accessToken);
       }
 
-      console.log('User logged in via Google: ', user);
 
       // Navigate to home page
       router.push('/dashboard');

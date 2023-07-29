@@ -66,19 +66,19 @@ export default function FormatSidebar() {
   const formatItemDisplayNames = ["Document Left/Right", "Document Top", "Section Spacing", "Subsection Spacing", "Bullet Spacing"];
 
   return (
-    <div className="formatSidebar flex flex-col items-center justify-center border border-gray-300 bg-white shadow-lg p-6 rounded-md mr-[15%] mt-[20%]">
+    <div className="formatSidebar flex flex-col items-center justify-center bg-white shadow-lg p-6 rounded-md mt-6">
       <h2 className="text-2xl font-bold mb-4">Format</h2>
       <div className="formatSidebarContainer w-full">
         {formatItemNames.map((itemName, i) => (
-          <div className="formatSidebarContainerItem flex flex-row items-center border-b border-gray-200 p-2" key={itemName}>
-            <label htmlFor="format" className="text-lg font-medium w-1/2">{formatItemDisplayNames[i]}</label>
-            <div className="flex items-center w-1/2 justify-between">
+          <div className="formatSidebarContainerItem items-center border-b border-gray-200 p-2" key={itemName}>
+            <label htmlFor="format" className="text-md font-medium">{formatItemDisplayNames[i]}</label>
+            <div className="flex items-center justify-between">
               <SliderSizes itemName={itemName} />
               <input
                 type="text"
                 value={parseInt(customFormat[itemName].split("px")[0])}
                 onChange={(e) => setCustomFormatField(itemName, e.target.value)}
-                className="border border-gray-300 rounded w-1/2"
+                className="border border-gray-300 rounded w-1/4 h-1/2"
               />
               {/* <UpDown itemName={itemName} /> */}
             </div>

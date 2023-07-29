@@ -4,18 +4,14 @@ import FormatSidebar from '../components/FormatSidebar.jsx'
 
 export default function Dashboard() {
   return (
-    <div className="h-screen flex m-10">
-      <div className="w-1/2">
+    <div className="h-screen flex py-5 px-10 bg-gray-50">
+      <div className='w-1/4'>
         <FormatSidebar />
       </div>
+      <Resume editable={true} scale={0.75} />
       <div>
-        <Resume editable={true} />
+        {/* Your content for the third 25% column */}
       </div>
-      {/* <div style={{ height: 900 }}>
-          <PDFViewer style={{ height: '100%', width: '100%' }}>
-            <Resume2 style={{ height: 900 }} />
-          </PDFViewer>
-      </div> */}
     </div>
   );
 }

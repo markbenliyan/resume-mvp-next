@@ -3,14 +3,15 @@ import useStore from "../store";
 import HoveringToolbar from "./HoveringToolbar";
 
 
-const Resume = ({ editable = false, resumeOnly = false }) => {
+const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
   const { resume, customFormat, updateTitleTextLeft, updateText } = useStore();
-
+  const TOOLBAR_OFFSET = 15 * scale;
   const style = {
     canvas: {
       width: '816px', // 8.5 inches at 96 DPI
       height: '1056px', // 11 inches at 96 DPI
-      border: '1px solid black',
+      transformOrigin: '50% 0',
+      transform: `scale(${scale})`,
     },
     resume: {
       margin: `${customFormat.resumeMarginTopBottom} ${customFormat.resumeMarginLeftRight}`
@@ -154,9 +155,10 @@ const Resume = ({ editable = false, resumeOnly = false }) => {
     const currentRect = e.currentTarget.getBoundingClientRect();
     // const resumeRect = document.getElementById('canvas').getBoundingClientRect();
 
+    console.log('currentRect: ', currentRect);
     setToolbarPos({
-      x: currentRect.left,
-      y: currentRect.top + currentRect.height / 2 - 20
+      x: currentRect.left - TOOLBAR_OFFSET,
+      y: currentRect.top,
     });
 
     setActiveItemIndices({ sectionIndex, subsectionIndex, descriptionIndex });
@@ -171,8 +173,8 @@ const Resume = ({ editable = false, resumeOnly = false }) => {
 
   return (
     <>
-      {!resumeOnly && editable && <HoveringToolbar {...toolbarPos} activeIndices={activeItemIndices} />}
-      <div id="canvas" style={style.canvas}>
+      {!resumeOnly && editable && <HoveringToolbar scale={scale} {...toolbarPos} activeIndices={activeItemIndices} />}
+      <div id="canvas" style={style.canvas} className="bg-white shadow-2xl">
         <div id="resume" style={style.resume}>
           <div id="headerSection" style={style.headerSection}>
             <h1 id="headerName" style={style.headerName}>

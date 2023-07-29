@@ -5,7 +5,7 @@ import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import AddIcon from '@material-ui/icons/Add';
 
-const HoveringToolbar = ({ x, y, activeIndices }) => {
+const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
   const {
     deleteHandler,
     addHandler,
@@ -23,6 +23,8 @@ const HoveringToolbar = ({ x, y, activeIndices }) => {
     right: typeof window !== 'undefined' ? `${window.innerWidth - x}px` : `0px`,
     top: `${y}px`,
     zIndex: 1000,
+    transformOrigin: 'right top',
+    transform: `scale(${scale})`,
   };
 
   const handleMoveUp = () => {

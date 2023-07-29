@@ -19,7 +19,6 @@ export default function SignUp() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log('User registered: ', user);
       // Add any additional user setup tasks here
 
       // navigate to home page
@@ -37,10 +36,7 @@ export default function SignUp() {
 
       if (userCredential.credential) {
         const accessToken = userCredential.credential.accessToken;
-        console.log('Access Token: ', accessToken);
       }
-
-      console.log('User registered via Google: ', user);
 
       router.push('/dashboard');
     } catch (error) {
