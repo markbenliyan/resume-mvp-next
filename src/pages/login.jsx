@@ -21,7 +21,7 @@ export default function Login() {
       console.log('User logged in: ', user);
 
       // Navigate to home page
-      router.push('/');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Error logging in user: ', error);
     }
@@ -41,7 +41,7 @@ export default function Login() {
       console.log('User logged in via Google: ', user);
 
       // Navigate to home page
-      router.push('/');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Error logging in user via Google: ', error);
     }

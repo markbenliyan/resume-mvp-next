@@ -23,7 +23,7 @@ export default function SignUp() {
       // Add any additional user setup tasks here
 
       // navigate to home page
-      router.push('/');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Error registering user: ', error);
     }
@@ -42,7 +42,7 @@ export default function SignUp() {
 
       console.log('User registered via Google: ', user);
 
-      router.push('/');
+      router.push('/dashboard');
     } catch (error) {
       console.error('Error registering user via Google: ', error);
     }
