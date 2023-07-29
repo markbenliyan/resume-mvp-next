@@ -4,6 +4,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
+import DownloadButton from './DownloadButton';
 
 
 function SliderSizes({ itemName }) {
@@ -11,7 +12,7 @@ function SliderSizes({ itemName }) {
   const currentValue = parseInt(useStore((state) => state.customFormat[itemName].split("px")[0]));
 
   return (
-    <Box className="w-[100%] px-5">
+    <Box className="w-[100%] pr-5">
       <Slider
         min={itemName.startsWith("resumeMargin") ? 0 : -20}
         max={80}
@@ -65,24 +66,27 @@ export default function FormatSidebar() {
   const formatItemDisplayNames = ["Document Left/Right", "Document Top", "Section Spacing", "Subsection Spacing", "Bullet Spacing"];
 
   return (
-    <div className="formatSidebar flex flex-col items-center justify-center border border-gray-300 bg-white shadow-lg p-6 rounded-md mx-[20%] mt-[20%]">
+    <div className="formatSidebar flex flex-col items-center justify-center border border-gray-300 bg-white shadow-lg p-6 rounded-md mr-[15%] mt-[20%]">
       <h2 className="text-2xl font-bold mb-4">Format</h2>
       <div className="formatSidebarContainer w-full">
         {formatItemNames.map((itemName, i) => (
           <div className="formatSidebarContainerItem flex flex-row items-center border-b border-gray-200 p-2" key={itemName}>
             <label htmlFor="format" className="text-lg font-medium w-1/2">{formatItemDisplayNames[i]}</label>
-            <div className="flex items-center w-1/2">
+            <div className="flex items-center w-1/2 justify-between">
               <SliderSizes itemName={itemName} />
               <input
                 type="text"
                 value={parseInt(customFormat[itemName].split("px")[0])}
                 onChange={(e) => setCustomFormatField(itemName, e.target.value)}
-                className="border border-gray-300 rounded p-2 mr-2 w-1/4"
+                className="border border-gray-300 rounded w-1/2"
               />
               {/* <UpDown itemName={itemName} /> */}
             </div>
           </div>
         ))}
+      </div>
+      <div className='mt-5'>
+        <DownloadButton />
       </div>
     </div>
 

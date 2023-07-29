@@ -21,7 +21,7 @@ function DownloadButton() {
       onClick={downloadPDF}
     >
       <ArrowDownTrayIcon className="-ml-0.5 h-4 w-4" aria-hidden="true" />
-      Download
+      Download Resume
     </button>
   );
 }
