@@ -164,8 +164,7 @@ const Resume = ({ editable = false, resumeOnly = false }) => {
   };
 
   const handleMouseLeave = () => (e) => {
-    // Remove a class from the current target
-    console.log('removing class')
+    // Remove the hover element
     e.currentTarget.classList.remove('bg-gray-100');
   };
 
