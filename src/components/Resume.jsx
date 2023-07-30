@@ -143,6 +143,14 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
     },
   };
 
+  const hasTitleText = (subsection) => {
+    return (Boolean(subsection.titleTextLeft) || Boolean(subsection.titleTextRight));
+  }
+
+  const hasSubtitleText = (subsection) => {
+    return (Boolean(subsection.subtitleTextLeft) || Boolean(subsection.subtitleTextRight));
+  }
+
   const [activeItemIndices, setActiveItemIndices] = useState({ sectionIndex: null, subsectionIndex: null, descriptionIndex: null });
 
   function handleBlur(e, operation, sectionIndex = undefined, subsectionIndex = undefined, descriptionIndex = undefined) {
@@ -214,24 +222,28 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                 {section.subSections.map((subSection, subSectionIndex) =>
                   subSection.hidden ? null : (
                     <div className="subsection" style={style.subsection} key={subSectionIndex}>
-                      {section.type !== 'SKILLS' &&
+                      {section.type !== 'SKILLS' && (hasTitleText(subSection) || hasSubtitleText(subSection)) &&
                         <div onMouseEnter={handleMouseEnter(sectionIndex, subSectionIndex)} onMouseLeave={handleMouseLeave()}>
-                          <div className="subsectionTitle" style={style.subsectionTitle}>
-                            <p className="subsectionTitleText1" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'titleTextLeft', sectionIndex, subSectionIndex)} style={style.subsectionTitleText1}>
-                              {subSection.titleTextLeft}
-                            </p>
-                            <p className="subsectionTitleText2" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'titleTextRight', sectionIndex, subSectionIndex)} style={style.subsectionTitleText2}>
-                              {subSection.titleTextRight}
-                            </p>
-                          </div>
-                          <div className="subsectionSubtitle" style={style.subsectionSubtitle}>
-                            <p className="subsectionSubtitleText1" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'subtitleTextLeft', sectionIndex, subSectionIndex)} style={style.subsectionSubtitleText1}>
-                              {subSection.subtitleTextLeft}
-                            </p>
-                            <p className="subsectionSubtitleText2" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'subtitleTextRight', sectionIndex, subSectionIndex)} style={style.subsectionSubtitleText2}>
-                              {subSection.subtitleTextRight}
-                            </p>
-                          </div>
+                          {hasTitleText(subSection) &&
+                            <div className="subsectionTitle" style={style.subsectionTitle}>
+                              <p className="subsectionTitleText1" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'titleTextLeft', sectionIndex, subSectionIndex)} style={style.subsectionTitleText1}>
+                                {subSection.titleTextLeft}
+                              </p>
+                              <p className="subsectionTitleText2" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'titleTextRight', sectionIndex, subSectionIndex)} style={style.subsectionTitleText2}>
+                                {subSection.titleTextRight}
+                              </p>
+                            </div>
+                          }
+                          {hasSubtitleText(subSection) &&
+                            <div className="subsectionSubtitle" style={style.subsectionSubtitle}>
+                              <p className="subsectionSubtitleText1" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'subtitleTextLeft', sectionIndex, subSectionIndex)} style={style.subsectionSubtitleText1}>
+                                {subSection.subtitleTextLeft}
+                              </p>
+                              <p className="subsectionSubtitleText2" contentEditable={editable} suppressContentEditableWarning={true} onBlur={(e) => handleBlur(e, 'subtitleTextRight', sectionIndex, subSectionIndex)} style={style.subsectionSubtitleText2}>
+                                {subSection.subtitleTextRight}
+                              </p>
+                            </div>
+                          }
                         </div>
                       }
                       <div style={style.subsectionBody}>

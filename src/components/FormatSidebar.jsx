@@ -60,8 +60,9 @@ function UpDown({ itemName }) {
 
 
 export default function FormatSidebar() {
-  const customFormat = useStore((state) => state.customFormat);
-  const setCustomFormatField = useStore((state) => state.setCustomFormatField);
+
+  const { customFormat, setCustomFormatField, undo, redo } = useStore();
+
   const formatItemNames = ["resumeMarginLeftRight", "headerSectionMarginTop", "sectionMarginTop", "subsectionMarginTop", "subsectionBodyBulletMarginTop"]
   const formatItemDisplayNames = ["Document Left/Right", "Document Top", "Section Spacing", "Subsection Spacing", "Bullet Spacing"];
 
@@ -87,6 +88,10 @@ export default function FormatSidebar() {
       </div>
       <div className='mt-5'>
         <DownloadButton />
+      </div>
+      <div className='mt-5 flex gap-5'>
+        <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l" onClick={undo}>Undo</button>
+        <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r" onClick={redo}>Redo</button>
       </div>
     </div>
 

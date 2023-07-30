@@ -58,6 +58,8 @@ interface CustomFormat {
 interface Store {
   resume: Resume;
   customFormat: CustomFormat;
+  history: Resume[],
+  future: Resume[],
   setCustomFormatField: (field: keyof Store['customFormat'], value: string) => void;
   incrementCustomFormatField: (field: keyof Store['customFormat']) => void;
   decrementCustomFormatField: (field: keyof Store['customFormat']) => void;
@@ -70,6 +72,8 @@ interface Store {
   addHandler: (sectionIndex: number, subSectionIndex?: number,  descriptionIndex?: number) => void;
   deleteHandler: (sectionIndex: number, subSectionIndex?: number, descriptionIndex?: number) => void;
   moveHandler: (oldIndex: number, newIndex: number, sectionIndex?: number, subsectionIndex?: number) => void;
+  undo: () => void;
+  redo: () => void;
 }
 
 function moveArrayItem<T>(arr: T[], oldIndex: number, newIndex: number): T[] {
@@ -121,18 +125,18 @@ const useStore = create<Store>((set) => ({
     subsectionBodyBulletMarginTop: '0px',
   },
   incrementCustomFormatField: (field) => set((state) =>
-  produce(state, (draft) => {
-    const currentValue = parseInt(draft.customFormat[field], 10); 
-    draft.customFormat[field] = `${currentValue + 1}px`; 
-  })
-  ),
+    produce(state, (draft) => {
+      const currentValue = parseInt(draft.customFormat[field], 10); 
+      draft.customFormat[field] = `${currentValue + 1}px`; 
+    })
+    ),
 
   decrementCustomFormatField: (field) => set((state) =>
-  produce(state, (draft) => {
-    const currentValue = parseInt(draft.customFormat[field], 10); 
-    draft.customFormat[field] = `${currentValue - 1}px`;
-  })
-  ),
+    produce(state, (draft) => {
+      const currentValue = parseInt(draft.customFormat[field], 10); 
+      draft.customFormat[field] = `${currentValue - 1}px`;
+    })
+    ),
   setCustomFormatField: (field, value) => set((state) =>
     produce(state, (draft) => {
       draft.customFormat[field] = value === "" ? "0px" : `${value}px`;
@@ -298,7 +302,16 @@ const useStore = create<Store>((set) => ({
       },
     ],
   },
-  setResume: (resume: Resume) => set({ resume }),
+  history: [],
+  future: [],
+  // setResume may not be updated
+  setResume: (resume: Resume) => set((state) => {
+    return {
+      history: [...state.history, state.resume],
+      resume: resume,
+      future: [],
+    }
+  }),
   updateSection: (sectionIndex, section) => set((state) => 
     produce(state, draft => {
       draft.resume.sections[sectionIndex] = section;
@@ -361,8 +374,10 @@ const useStore = create<Store>((set) => ({
     sectionIndex: number,
     subSectionIndex?: number,
     descriptionIndex?: number,
-  ) => set((state) => 
-    produce(state, (draft) => {
+  ) => set((state) => {
+    const oldState = produce(state, draft => {});  // Just copy the old state
+
+    return produce(state, (draft) => {
       if (descriptionIndex !== undefined && subSectionIndex !== undefined && sectionIndex !== undefined) {
         if (
           draft.resume.sections[sectionIndex] &&
@@ -385,11 +400,17 @@ const useStore = create<Store>((set) => ({
           draft.resume.sections.push(newSection);
         }
       }
-    })
+
+      // Update history and reset future
+      draft.history = [...state.history, oldState.resume];
+      draft.future = [];
+    }); 
+  }
   ),
   deleteHandler: (sectionIndex: number, subSectionIndex?: number, descriptionIndex?: number) =>
-    set((state) =>
-      produce(state, (draft) => {
+    set((state) => {
+      const oldState = produce(state, draft => {});  // Just copy the old state
+      return produce(state, (draft) => {
         if (descriptionIndex !== undefined && subSectionIndex !== undefined) {
           if (
             draft.resume.sections[sectionIndex] &&
@@ -408,15 +429,21 @@ const useStore = create<Store>((set) => ({
         } else if (draft.resume.sections[sectionIndex]) {
           draft.resume.sections.splice(sectionIndex, 1);
         }
-      }),
-    ),
+
+        // Update history and reset future
+        draft.history = [...state.history, oldState.resume];
+        draft.future = [];
+      });
+    }),
   moveHandler: (
     oldIndex: number,
     newIndex: number,
     sectionIndex?: number, 
     subSectionIndex?: number
-  ) => set((state) =>
-    produce(state, (draft) => {
+  ) => set((state) => {
+    const oldState = produce(state, draft => {});  // Just copy the old state
+
+    return produce(state, (draft) => {
       if (subSectionIndex !== undefined && sectionIndex !== undefined) {
         if (
           draft.resume.sections[sectionIndex] &&
@@ -436,8 +463,39 @@ const useStore = create<Store>((set) => ({
         const sections = draft.resume.sections;
         draft.resume.sections = moveArrayItem(sections, oldIndex, newIndex);
       }
+
+      // Update history and reset future
+      draft.history = [...state.history, oldState.resume];
+      draft.future = [];
     })
-  ),
+  }),
+  undo: () => set((state) => {
+    console.log(state.history)
+    if (state.history.length === 0) {
+      return state;  // No actions to undo, return current state
+    }
+    const [last, ...rest] = state.history.slice().reverse();
+    console.log(last)
+    return {
+      ...state,
+      history: rest.reverse(),
+      resume: last,
+      future: [state.resume, ...state.future]
+    };
+  }),
+  redo: () => set((state) => {
+    console.log(state.history)
+    if (state.future.length === 0) {
+      return state; 
+    }
+    const [next, ...rest] = state.future;
+    return {
+      ...state,
+      history: [state.resume, ...state.history],
+      resume: next,
+      future: rest
+    };
+  }),
 }));
 
 export default useStore;
