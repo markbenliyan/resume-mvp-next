@@ -327,22 +327,39 @@ const useStore = create<Store>((set) => ({
       draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex] = description;
     })
   ),
-  updateText: (operation, newValue, sectionIndex?, subSectionIndex?, descriptionIndex?) => set((state) =>
-    produce(state, draft => {
+  updateText: (operation, newValue, sectionIndex?, subSectionIndex?, descriptionIndex?) => set((state) => {
+    const oldState = produce(state, draft => {});
+
+    return produce(state, draft => {
       if (operation === 'firstName') {
+        if (draft.resume.firstName === newValue) {
+          return;
+        }
         draft.resume.firstName = newValue;
       } else if (operation === 'lastName') {
+        if (draft.resume.lastName === newValue) {
+          return;
+        }
         draft.resume.lastName = newValue;
       } else if (descriptionIndex !== undefined) {
         // If descriptionIndex is provided, we are updating a description-level field
         const targetDescription = draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex];
         
         if (targetDescription.type === "BULLET") {
+          if (targetDescription.value === newValue) {
+            return;
+          }
           targetDescription.value = newValue;
         } else if (targetDescription.type === "SPLIT") {
           if (operation === 'valueLeft') {
+            if (targetDescription.valueLeft === newValue) {
+              return;
+            }
             targetDescription.valueLeft = newValue;
           } else if (operation === 'valueRight') {
+            if (targetDescription.valueRight === newValue) {
+              return;
+            }
             targetDescription.valueRight = newValue;
           }
         }
@@ -350,21 +367,40 @@ const useStore = create<Store>((set) => ({
         // If subSectionIndex is provided, we are updating a subsection-level field
         const targetSubsection = draft.resume.sections[sectionIndex].subSections[subSectionIndex];
         if (operation === 'titleTextLeft') {
+          if (targetSubsection.titleTextLeft === newValue) {
+            return;
+          }
           targetSubsection.titleTextLeft = newValue;
         } else if (operation === 'titleTextRight') {
+          if (targetSubsection.titleTextRight === newValue) {
+            return;
+          }
           targetSubsection.titleTextRight = newValue;
         } else if (operation === 'subtitleTextLeft') {
+          if (targetSubsection.subtitleTextLeft === newValue) {
+            return;
+          }
           targetSubsection.subtitleTextLeft = newValue;
         } else if (operation === 'subtitleTextRight') {
+          if (targetSubsection.subtitleTextRight === newValue) {
+            return;
+          }
           targetSubsection.subtitleTextRight = newValue;
         }
       } else {
         // If only sectionIndex is provided, we are updating a section-level field
         const targetSection = draft.resume.sections[sectionIndex];
+        if (targetSection.name === newValue) {
+          return;
+        }
         targetSection.name = newValue;
       }
-    })
-  ),
+
+      // Update history and reset future
+      draft.history = [...state.history, oldState.resume];
+      draft.future = [];
+    });
+  }),
   toggleSectionHidden: (sectionIndex) => set((state) => 
     produce(state, draft => {
       draft.resume.sections[sectionIndex].hidden = !draft.resume.sections[sectionIndex].hidden;

@@ -12,7 +12,7 @@ app.get('/pdf', async (req, res) => {
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
 
-  await page.goto('http://localhost:3000/resumeOnly', {
+  await page.goto('http://localhost:3000/resumeonly', {
     waitUntil: 'networkidle0',
   });
 

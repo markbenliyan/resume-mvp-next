@@ -28,7 +28,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/pages/forgotpassword.jsx"  ],
   "exclude": [
     "node_modules"
   ]

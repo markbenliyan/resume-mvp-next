@@ -30,6 +30,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
     },
     headerFirstName: {
       fontWeight: '800',
+      marginRight: '10px',
     },
     headerLastName: {
       fontWeight: '500',
@@ -163,7 +164,6 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
     const currentRect = e.currentTarget.getBoundingClientRect();
     // const resumeRect = document.getElementById('canvas').getBoundingClientRect();
 
-    console.log('currentRect: ', currentRect);
     setToolbarPos({
       x: currentRect.left - TOOLBAR_OFFSET,
       y: currentRect.top,
@@ -195,7 +195,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
               <span id="lastName" contentEditable={editable} suppressContentEditableWarning={true}
                 onBlur={(e) => handleBlur(e, 'lastName')}
                 style={style.headerLastName}>
-                {' ' + resume.lastName}
+                {resume.lastName}
               </span>
             </h1>
             <div id="headerContacts" style={style.headerContacts}>
