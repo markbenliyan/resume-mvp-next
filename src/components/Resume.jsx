@@ -183,8 +183,6 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
     fetchData();
   }, [auth.currentUser, setResume]);  // Depend on auth.currentUser to refetch when the user changes
 
-
-  console.log('resume', resume);
   // check if we already have user's name and email - add it to resume if so!
   useEffect(() => {
     auth.onAuthStateChanged((user) => {

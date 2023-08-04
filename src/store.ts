@@ -337,7 +337,6 @@ export const useStore = create<Store>((set) => ({
         }
         draft.resume.lastName = newValue;
       } else if (operation === 'contactInfo' && sectionIndex !== undefined) {
-        console.log('updating contact info', sectionIndex, newValue)
         if (draft.resume.contactInfo[sectionIndex] === newValue) {
           return;
         }
