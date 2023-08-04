@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import useStore from "../store";
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 
@@ -60,14 +60,17 @@ function UpDown({ itemName }) {
 
 
 export default function FormatSidebar() {
+  const { customFormat, setCustomFormatField } = useStore();
 
-  const { customFormat, setCustomFormatField, undo, redo } = useStore();
+  useEffect(() => {
+    document.documentElement.style.setProperty('--subsection-body-bullet-margin-top', customFormat.subsectionBodyBulletMarginTop);
+  }, [customFormat.subsectionBodyBulletMarginTop]);
 
   const formatItemNames = ["resumeMarginLeftRight", "headerSectionMarginTop", "sectionMarginTop", "subsectionMarginTop", "subsectionBodyBulletMarginTop"]
   const formatItemDisplayNames = ["Document Left/Right", "Document Top", "Section Spacing", "Subsection Spacing", "Bullet Spacing"];
 
   return (
-    <div className="formatSidebar flex flex-col items-center justify-center bg-white shadow-lg p-6 rounded-md mt-6">
+    <div className="formatSidebar flex flex-col items-center justify-center bg-white shadow-md p-6 rounded-md mt-6">
       <h2 className="text-2xl font-bold mb-4">Format</h2>
       <div className="formatSidebarContainer w-full">
         {formatItemNames.map((itemName, i) => (
@@ -85,13 +88,6 @@ export default function FormatSidebar() {
             </div>
           </div>
         ))}
-      </div>
-      <div className='mt-5'>
-        <DownloadButton />
-      </div>
-      <div className='mt-5 flex gap-5'>
-        <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-l" onClick={undo}>Undo</button>
-        <button className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r" onClick={redo}>Redo</button>
       </div>
     </div>
 

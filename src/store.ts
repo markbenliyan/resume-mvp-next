@@ -70,7 +70,7 @@ interface Store {
   updateText: (operation: string, newValue: string, sectionIndex: number, subSectionIndex: number, descriptionIndex:number) => void;
   toggleSectionHidden: (sectionIndex: number) => void;
   addHandler: (sectionIndex: number, subSectionIndex?: number,  descriptionIndex?: number) => void;
-  deleteHandler: (sectionIndex: number, subSectionIndex?: number, descriptionIndex?: number) => void;
+  deleteHandler: (sectionIndex?: number, subSectionIndex?: number, descriptionIndex?: number) => void;
   moveHandler: (oldIndex: number, newIndex: number, sectionIndex?: number, subsectionIndex?: number) => void;
   undo: () => void;
   redo: () => void;
@@ -91,9 +91,19 @@ function moveArrayItem<T>(arr: T[], oldIndex: number, newIndex: number): T[] {
   return newArr;
 }
 
-const newDescription: BulletDescription = {
+const newContactString = 'New Contact Info';
+
+const newBulletDescription: BulletDescription = {
   type: 'BULLET',
-  value: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+  value: "<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div>",
+  hidden: false,
+};
+
+const newSplitDescription: SplitDescription = {
+  type: "SPLIT",
+  valueLeft: "Category",
+  valueRight:
+    "Item 1, Item 2, Item 3, Item 4, Item 5, Item 6",
   hidden: false,
 };
 
@@ -103,7 +113,7 @@ const newSubSection: SubSection = {
   titleTextRight: 'Month Year - Month Year',
   subtitleTextLeft: 'Subsection Subtitle',
   subtitleTextRight: 'City, State',
-  descriptions: [newDescription],
+  descriptions: [newBulletDescription],
   hidden: false,
 };
 
@@ -167,7 +177,7 @@ const useStore = create<Store>((set) => ({
                 type: "SPLIT",
                 valueLeft: "Achievements",
                 valueRight:
-                  "174 LSAT Score (99th Percentile) | President - Alpha Epsilon Omega | Dean's Honor List President's Scholarship at UF Levine Law (#21 US News)",
+                  "174 LSAT Score (99th Percentile) | <b>President - Alpha Epsilon Omega</b> | Dean's Honor List President's Scholarship at UF Levine Law (#21 US News)",
                 hidden: false,
               },
             ],
@@ -189,19 +199,9 @@ const useStore = create<Store>((set) => ({
             descriptions: [
               {
                 type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                value: "<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div><div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div>",
                 hidden: false,
-              },
-              {
-                type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                hidden: false,
-              },
-              {
-                type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                hidden: false,
-              },
+              }
             ],
             hidden: false,
           },
@@ -214,17 +214,7 @@ const useStore = create<Store>((set) => ({
             descriptions: [
               {
                 type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                hidden: false,
-              },
-              {
-                type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                hidden: false,
-              },
-              {
-                type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                value: "<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div><div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div><div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div>",
                 hidden: false,
               },
             ],
@@ -281,17 +271,7 @@ const useStore = create<Store>((set) => ({
             descriptions: [
               {
                 type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                hidden: false,
-              },
-              {
-                type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-                hidden: false,
-              },
-              {
-                type: "BULLET",
-                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                value: "<div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div><div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div><div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.<br></div>",
                 hidden: false,
               },
             ],
@@ -341,6 +321,20 @@ const useStore = create<Store>((set) => ({
           return;
         }
         draft.resume.lastName = newValue;
+      } else if (operation === 'contactInfo' && sectionIndex !== undefined) {
+        if (draft.resume.contactInfo[sectionIndex] === newValue) {
+          return;
+        }
+
+        // If the new value is an empty string, remove it from the array
+        if (newValue.trim() === '') {
+          draft.resume.contactInfo = draft.resume.contactInfo.filter((_, index) => index !== sectionIndex);
+        } else {
+          draft.resume.contactInfo[sectionIndex] = newValue;
+        }
+
+        console.log('updated contact info')
+
       } else if (descriptionIndex !== undefined) {
         // If descriptionIndex is provided, we are updating a description-level field
         const targetDescription = draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex];
@@ -420,7 +414,11 @@ const useStore = create<Store>((set) => ({
           draft.resume.sections[sectionIndex].subSections[subSectionIndex] &&
           draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex]
         ) {
-          draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions.push(newDescription);
+          if (draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex].type === "BULLET") {
+            draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions.push(newBulletDescription);
+          } else if (draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex].type === "SPLIT") {
+            draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions.push(newSplitDescription);
+          }
         }
       } else if (subSectionIndex !== undefined && sectionIndex !== undefined) {
         if (
@@ -435,6 +433,9 @@ const useStore = create<Store>((set) => ({
         ) {
           draft.resume.sections.push(newSection);
         }
+      } else {
+        // contact info case
+        draft.resume.contactInfo.push(newContactString);
       }
 
       // Update history and reset future
@@ -443,11 +444,11 @@ const useStore = create<Store>((set) => ({
     }); 
   }
   ),
-  deleteHandler: (sectionIndex: number, subSectionIndex?: number, descriptionIndex?: number) =>
+  deleteHandler: (sectionIndex?: number, subSectionIndex?: number, descriptionIndex?: number) =>
     set((state) => {
       const oldState = produce(state, draft => {});  // Just copy the old state
       return produce(state, (draft) => {
-        if (descriptionIndex !== undefined && subSectionIndex !== undefined) {
+        if (descriptionIndex !== undefined && subSectionIndex !== undefined && sectionIndex !== undefined) {
           if (
             draft.resume.sections[sectionIndex] &&
             draft.resume.sections[sectionIndex].subSections[subSectionIndex] &&
@@ -455,15 +456,19 @@ const useStore = create<Store>((set) => ({
           ) {
             draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions.splice(descriptionIndex, 1);
           }
-        } else if (subSectionIndex !== undefined) {
+        } else if (subSectionIndex !== undefined && sectionIndex !== undefined) {
           if (
             draft.resume.sections[sectionIndex] &&
             draft.resume.sections[sectionIndex].subSections[subSectionIndex]
           ) {
             draft.resume.sections[sectionIndex].subSections.splice(subSectionIndex, 1);
           }
-        } else if (draft.resume.sections[sectionIndex]) {
+        } else if (sectionIndex !== undefined && draft.resume.sections[sectionIndex]) {
           draft.resume.sections.splice(sectionIndex, 1);
+        }
+        else {
+          // contact info case
+          draft.resume.contactInfo = [];
         }
 
         // Update history and reset future

@@ -3,15 +3,25 @@ import { ArrowDownTrayIcon } from '@heroicons/react/20/solid';
 
 function DownloadButton() {
   const downloadPDF = async () => {
-    const res = await fetch('http://localhost:3001/pdf');
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', 'output.pdf');
-    document.body.appendChild(link);
-    link.click();
-    link.parentNode.removeChild(link);
+    try {
+      const res = await fetch('/api/downloadpdf');
+      if (!res.ok) { // if HTTP-status is 200-299
+        // get the error message from the server,
+        // server response is here in res.text()
+        console.error(`An error occurred: ${res.status}`);
+        return;
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'output.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+    } catch (err) {
+      console.error(`An error occurred: ${err}`);
+    }
   };
 
   return (

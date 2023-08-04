@@ -6,6 +6,7 @@
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
+  --subsection-body-bullet-margin-top: '0px';
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,4 +23,9 @@
 
 .hiddenSection {
   opacity: 0.3;
+}
+
+.subsectionTextArea div {
+  display: list-item;
+  margin-top: var(--subsection-body-bullet-margin-top);
 }
