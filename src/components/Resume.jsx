@@ -242,6 +242,15 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
     }
   };
 
+  const handlePaste = async (e) => {
+    e.preventDefault();
+    const text = await navigator.clipboard.readText();
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return false;
+    selection.deleteFromDocument();
+    selection.getRangeAt(0).insertNode(document.createTextNode(text));
+  }
+
   return (
     <>
       {!resumeOnly && editable && <HoveringToolbar scale={scale} {...toolbarPos} activeIndices={activeItemIndices} />}
@@ -256,6 +265,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                 onBlur={(e) => handleBlur(e, 'firstName')}
                 style={style.headerFirstName}
                 suppressContentEditableWarning
+                onPaste={handlePaste}
               />
               <span
                 contentEditable={editable}
@@ -264,6 +274,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                 onBlur={(e) => handleBlur(e, 'lastName')}
                 style={style.headerLastName}
                 suppressContentEditableWarning
+                onPaste={handlePaste}
               />
             </h1>
             {resume.contactInfo.length > 0 &&
@@ -308,6 +319,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                   onBlur={(e) => handleBlur(e, 'name', sectionIndex)}
                   style={style.sectionTitle}
                   suppressContentEditableWarning
+                  onPaste={handlePaste}
                 />
                 {section.subSections.map((subSection, subSectionIndex) =>
                   subSection.hidden ? null : (
@@ -330,6 +342,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                                 onBlur={(e) => handleBlur(e, 'titleTextLeft', sectionIndex, subSectionIndex)}
                                 style={style.subsectionTitleText1}
                                 dangerouslySetInnerHTML={{ __html: subSection.titleTextLeft }}
+                                onPaste={handlePaste}
                               />
                               <p
                                 className="subsectionTitleText2"
@@ -338,6 +351,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                                 onBlur={(e) => handleBlur(e, 'titleTextRight', sectionIndex, subSectionIndex)}
                                 style={style.subsectionTitleText2}
                                 dangerouslySetInnerHTML={{ __html: subSection.titleTextRight }}
+                                onPaste={handlePaste}
                               />
                             </div>
                           }
@@ -350,6 +364,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                                 onBlur={(e) => handleBlur(e, 'subtitleTextLeft', sectionIndex, subSectionIndex)}
                                 style={style.subsectionSubtitleText1}
                                 dangerouslySetInnerHTML={{ __html: subSection.subtitleTextLeft }}
+                                onPaste={handlePaste}
                               />
                               <p
                                 className="subsectionSubtitleText2"
@@ -358,6 +373,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                                 onBlur={(e) => handleBlur(e, 'subtitleTextRight', sectionIndex, subSectionIndex)}
                                 style={style.subsectionSubtitleText2}
                                 dangerouslySetInnerHTML={{ __html: subSection.subtitleTextRight }}
+                                onPaste={handlePaste}
                               />
                             </div>
                           }
@@ -379,6 +395,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                                 onBlur={(e) => handleBlur(e, 'valueLeft', sectionIndex, subSectionIndex, descriptionIndex)}
                                 style={style.subsectionBodySplitText1}
                                 suppressContentEditableWarning
+                                onPaste={handlePaste}
                               />
                               <p
                                 className="subsectionBodySplitText2"
@@ -387,9 +404,11 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                                 onBlur={(e) => handleBlur(e, 'valueRight', sectionIndex, subSectionIndex, descriptionIndex)}
                                 style={style.subsectionBodySplitText2}
                                 suppressContentEditableWarning
+                                onPaste={handlePaste}
                               />
                             </div>
                           ) : (
+                            desc.value !== '' &&
                             <div
                               className="subsectionTextArea"
                               contentEditable={editable}
@@ -397,6 +416,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
                               onBlur={(e) => handleBlur(e, 'value', sectionIndex, subSectionIndex, descriptionIndex)}
                               dangerouslySetInnerHTML={{ __html: desc.value }}
                               style={style.subsectionTextArea}
+                              onPaste={handlePaste}
                             />
                           ))}
                       </div>

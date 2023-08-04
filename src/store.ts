@@ -423,8 +423,8 @@ const useStore = create<Store>((set) => ({
           draft.resume.sections[sectionIndex] &&
           draft.resume.sections[sectionIndex].subSections[subSectionIndex]
         ) {
-          // we add subSections to the specific index so that they appear right before the current subsection
-          draft.resume.sections[sectionIndex].subSections.splice(subSectionIndex, 0, newSubSection);
+          // we add subSection right after the current subSectionIndex
+          draft.resume.sections[sectionIndex].subSections.splice(subSectionIndex + 1, 0, newSubSection);
         }
       } else if (sectionIndex !== undefined) {
         if (
