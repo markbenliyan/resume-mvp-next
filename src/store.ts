@@ -333,8 +333,6 @@ const useStore = create<Store>((set) => ({
           draft.resume.contactInfo[sectionIndex] = newValue;
         }
 
-        console.log('updated contact info')
-
       } else if (descriptionIndex !== undefined) {
         // If descriptionIndex is provided, we are updating a description-level field
         const targetDescription = draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex];
@@ -425,13 +423,15 @@ const useStore = create<Store>((set) => ({
           draft.resume.sections[sectionIndex] &&
           draft.resume.sections[sectionIndex].subSections[subSectionIndex]
         ) {
-          draft.resume.sections[sectionIndex].subSections.push(newSubSection);
+          // we add subSections to the specific index so that they appear right before the current subsection
+          draft.resume.sections[sectionIndex].subSections.splice(subSectionIndex, 0, newSubSection);
         }
       } else if (sectionIndex !== undefined) {
         if (
           draft.resume.sections[sectionIndex]
         ) {
-          draft.resume.sections.push(newSection);
+          // we add newSection right after the current sectionIndex
+          draft.resume.sections.splice(sectionIndex + 1, 0, newSection);
         }
       } else {
         // contact info case
@@ -511,12 +511,11 @@ const useStore = create<Store>((set) => ({
     })
   }),
   undo: () => set((state) => {
-    console.log(state.history)
     if (state.history.length === 0) {
       return state;  // No actions to undo, return current state
     }
     const [last, ...rest] = state.history.slice().reverse();
-    console.log(last)
+
     return {
       ...state,
       history: rest.reverse(),
@@ -525,7 +524,6 @@ const useStore = create<Store>((set) => ({
     };
   }),
   redo: () => set((state) => {
-    console.log(state.history)
     if (state.future.length === 0) {
       return state; 
     }

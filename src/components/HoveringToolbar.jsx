@@ -94,23 +94,28 @@ const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
       text: 'Add',
       icon: <AddIcon className="h-4 w-4" aria-hidden="true" />,
     },
-  ];
-
-  if (!isHandleMoveUpDisabled()) {
-    toolbarButtons.push({
+    {
       handler: handleMoveUp,
       text: 'Move Up',
       icon: <ArrowUpwardIcon className="h-4 w-4" aria-hidden="true" />,
-    });
-  }
-
-  if (!isHandleMoveDownDisabled()) {
-    toolbarButtons.push({
+    },
+    {
       handler: handleMoveDown,
       text: 'Move Down',
       icon: <ArrowDownwardIcon className="h-4 w-4" aria-hidden="true" />,
-    });
-  }
+    },
+  ];
+
+  const isButtonDisabled = (text) => {
+    switch (text) {
+      case 'Move Up':
+        return isHandleMoveUpDisabled();
+      case 'Move Down':
+        return isHandleMoveDownDisabled();
+      default:
+        return false;
+    }
+  };
 
   return (
     <div style={style}>
@@ -121,8 +126,10 @@ const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
             type="button"
             className={`relative inline-flex items-center px-1 py-1 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-10 
             ${index === 0 ? 'rounded-l-md' : ''} 
-            ${index === toolbarButtons.length - 1 ? 'rounded-r-md' : ''}`}
+            ${index === toolbarButtons.length - 1 ? 'rounded-r-md' : ''}
+            ${isButtonDisabled(button.text) ? 'opacity-50 cursor-not-allowed' : ''}`}
             onClick={button.handler}
+            disabled={isButtonDisabled(button.text)}
           >
             <span className="sr-only">{button.text}</span>
             {button.icon}

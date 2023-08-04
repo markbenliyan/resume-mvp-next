@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-html-link-for-pages */
 /* eslint-disable @next/next/no-img-element */
-import { Fragment } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { PlusIcon } from '@heroicons/react/20/solid';
@@ -15,9 +15,18 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
+const DEFAULT_PHOTO_URL = "https://www.lightsong.net/wp-content/uploads/2020/12/blank-profile-circle.png"
 export default function Nav() {
+  const [photoURL, setPhotoURL] = useState(DEFAULT_PHOTO_URL);
   const auth = getAuth(app)
-  const router = useRouter();
+
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (user && user.photoURL) {
+        setPhotoURL(user.photoURL);
+      }
+    });
+  }, [auth]);
 
   const signOut = () => {
     auth.signOut()
@@ -52,7 +61,7 @@ export default function Nav() {
                   <img
                     className="h-8 w-auto"
                     src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-                    alt="Your Company"
+                    alt="Logo"
                   />
                 </div>
                 <div className="hidden md:ml-6 md:flex md:space-x-8">
@@ -96,7 +105,7 @@ export default function Nav() {
                         <span className="sr-only">Open user menu</span>
                         <img
                           className="h-8 w-8 rounded-full"
-                          src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                          src={photoURL}
                           alt=""
                         />
                       </Menu.Button>

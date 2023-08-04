@@ -60,7 +60,6 @@ export default function Home() {
     </div>
   )
 
-  console.log('loading ', loading)
   return (loading ? spinningLoader :
     (
       <>

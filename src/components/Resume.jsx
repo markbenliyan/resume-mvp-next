@@ -65,7 +65,8 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
       fontSize: '22px',
       fontWeight: '800',
       marginBottom: '5px',
-      borderBottom: 'solid black'
+      borderBottom: 'solid black',
+      position: 'relative',
     },
     subsection: {
       marginTop: customFormat.subsectionMarginTop,
@@ -200,8 +201,8 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
   const [activeItemIndices, setActiveItemIndices] = useState({ sectionIndex: null, subsectionIndex: null, descriptionIndex: null });
 
   function handleBlur(e, operation, sectionIndex = undefined, subsectionIndex = undefined, descriptionIndex = undefined) {
+    // sanitize the HTML to avoid XSS attacks 
     const cleanHTML = DOMPurify.sanitize(e.target.innerHTML, { USE_PROFILES: { html: true } });
-    console.log(cleanHTML)
 
     updateText(operation, cleanHTML, sectionIndex, subsectionIndex, descriptionIndex);
   }
@@ -229,7 +230,6 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
     // Add the class to the currently hovered element
     e.currentTarget.classList.add('bg-gray-100');
 
-    console.log('adding class to ', e.currentTarget, ' and removing from ', prevHoveredElem)
     // Update the reference to the currently hovered element
     setPrevHoveredElem(e.currentTarget);
 
