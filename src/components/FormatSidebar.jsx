@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import useStore from "../store";
+import { useStore } from "../store";
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/20/solid'
 
 import Box from '@mui/material/Box';

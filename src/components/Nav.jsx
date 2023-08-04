@@ -3,12 +3,9 @@
 import { Fragment, useState, useEffect } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
 import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import { PlusIcon } from '@heroicons/react/20/solid';
 import { getAuth } from "firebase/auth";
 import { app } from '../../lib/firebase';
 import DownloadButton from './DownloadButton';
-import { useRouter } from 'next/router';
-import Link from 'next/link';
 
 
 function classNames(...classes) {

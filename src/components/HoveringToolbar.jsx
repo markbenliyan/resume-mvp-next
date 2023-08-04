@@ -1,11 +1,11 @@
 import React from "react";
-import useStore from "../store";
+import { useStore } from "../store";
 import DeleteIcon from '@material-ui/icons/Delete';
 import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
 import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 import AddIcon from '@material-ui/icons/Add';
 
-const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
+const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0, debouncedSync }) => {
   const {
     deleteHandler,
     addHandler,
@@ -27,7 +27,7 @@ const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
     transform: `scale(${scale})`,
   };
 
-  const handleMoveUp = () => {
+  const debouncedHandleMoveUp = () => {
     if (descriptionIndex !== undefined) {
       if (descriptionIndex > 0) {
         moveHandler(descriptionIndex, descriptionIndex - 1, sectionIndex, subsectionIndex);
@@ -37,6 +37,8 @@ const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
     } else if (sectionIndex !== undefined) {
       if (sectionIndex > 0) moveHandler(sectionIndex, sectionIndex - 1);
     }
+
+    debouncedSync();
   };
 
   const isHandleMoveUpDisabled = () => {
@@ -51,7 +53,7 @@ const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
     return true;
   };
 
-  const handleMoveDown = () => {
+  const debouncedHandleMoveDown = () => {
     const sections = resume.sections;
 
     if (descriptionIndex !== undefined && subsectionIndex !== undefined && sections[sectionIndex] && sections[sectionIndex].subSections[subsectionIndex]) {
@@ -64,6 +66,8 @@ const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
       const sectionsLength = sections.length;
       if (sectionIndex < sectionsLength - 1) moveHandler(sectionIndex, sectionIndex + 1);
     }
+
+    debouncedSync();
   };
 
   const isHandleMoveDownDisabled = () => {
@@ -83,24 +87,39 @@ const HoveringToolbar = ({ x, y, activeIndices, scale = 1.0 }) => {
     return true;
   };
 
+  const debouncedDeleteHandler = (sectionIndex, subsectionIndex, descriptionIndex) => {
+    deleteHandler(sectionIndex, subsectionIndex, descriptionIndex);
+    debouncedSync();
+  };
+
+  const debouncedAddHandler = (sectionIndex, subsectionIndex, descriptionIndex) => {
+    addHandler(sectionIndex, subsectionIndex, descriptionIndex);
+    debouncedSync();
+  };
+
+  const debouncedMoveHandler = (fromIndex, toIndex, sectionIndex, subsectionIndex) => {
+    moveHandler(fromIndex, toIndex, sectionIndex, subsectionIndex);
+    debouncedSync();
+  };
+
   const toolbarButtons = [
     {
-      handler: () => deleteHandler(sectionIndex, subsectionIndex, descriptionIndex),
+      handler: () => debouncedDeleteHandler(sectionIndex, subsectionIndex, descriptionIndex),
       text: 'Delete',
       icon: <DeleteIcon className="h-4 w-4" aria-hidden="true" />,
     },
     {
-      handler: () => addHandler(sectionIndex, subsectionIndex, descriptionIndex),
+      handler: () => debouncedAddHandler(sectionIndex, subsectionIndex, descriptionIndex),
       text: 'Add',
       icon: <AddIcon className="h-4 w-4" aria-hidden="true" />,
     },
     {
-      handler: handleMoveUp,
+      handler: debouncedHandleMoveUp,
       text: 'Move Up',
       icon: <ArrowUpwardIcon className="h-4 w-4" aria-hidden="true" />,
     },
     {
-      handler: handleMoveDown,
+      handler: debouncedHandleMoveDown,
       text: 'Move Down',
       icon: <ArrowDownwardIcon className="h-4 w-4" aria-hidden="true" />,
     },

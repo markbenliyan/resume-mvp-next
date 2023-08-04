@@ -1,10 +1,24 @@
-import React, { useState, useEffect } from "react";
-import useStore from "../store";
-import HoveringToolbar from "./HoveringToolbar";
 import * as DOMPurify from 'dompurify';
+import { getAuth } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import { app, db } from '../../lib/firebase';
+import { useStore, syncWithFirestore } from "../store";
+import HoveringToolbar from "./HoveringToolbar";
+import LoadingSpinner from '../components/LoadingSpinner';
+import { debounce } from 'lodash';
+
+
 
 const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
-  const { resume, customFormat, updateText, undo, redo } = useStore();
+  const [resumeId, setResumeId] = useState(null);  // state to hold the user's resume ID
+
+  const debouncedSync = debounce(() => syncWithFirestore(resumeId), 1000); // wait 1s after last call
+
+
+  const { customFormat, resume, updateText, undo, redo, setResume } = useStore();
+  const auth = getAuth(app)
+
   const TOOLBAR_OFFSET = 15 * scale;
   const style = {
     canvas: {
@@ -144,6 +158,54 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
   };
 
   useEffect(() => {
+    const fetchData = async () => {
+      if (auth.currentUser) {
+        const user = auth.currentUser;
+
+        // Get reference to the resume document
+        const resumeDocRef = doc(db, 'resumes', user.uid);
+
+        // Fetch the document
+        const resumeDoc = await getDoc(resumeDocRef);
+
+        // If the document exists, update the state with its data
+        if (resumeDoc.exists()) {
+          console.log('Document data:', resumeDoc.data());
+          setResume(resumeDoc.data().content);
+          setResumeId(resumeDoc.id);
+        } else {
+          // Document does not exist
+          console.log('No such document!');
+        }
+      }
+    };
+
+    fetchData();
+  }, [auth.currentUser, setResume]);  // Depend on auth.currentUser to refetch when the user changes
+
+
+  console.log('resume', resume);
+  // check if we already have user's name and email - add it to resume if so!
+  useEffect(() => {
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        if (user.displayName) {
+          const nameArray = user.displayName.split(' ');
+          if (nameArray.length > 1) {
+            const firstName = nameArray[0];
+            const lastName = nameArray[1];
+            updateText('firstName', firstName);
+            updateText('lastName', lastName);
+          }
+        }
+        if (user.email) {
+          updateText('contactInfo', user.email, 1);
+        }
+      }
+    });
+  }, [auth, updateText]);
+
+  useEffect(() => {
     let initialHTML = null;
 
     const focusHandler = (event) => {
@@ -176,7 +238,11 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
         event.preventDefault();
         redo();
       }
+
+      debouncedSync();
     };
+
+
 
     window.addEventListener('focus', focusHandler, true); // Use capture to catch the event early
     window.addEventListener('keydown', keydownHandler);
@@ -185,7 +251,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
       window.removeEventListener('focus', focusHandler, true);
       window.removeEventListener('keydown', keydownHandler);
     };
-  }, [undo, redo]);
+  }, [undo, redo, debouncedSync]);
 
   const [toolbarPos, setToolbarPos] = useState({ x: 0, y: 0 });
   const [prevHoveredElem, setPrevHoveredElem] = useState(null);
@@ -205,6 +271,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
     const cleanHTML = DOMPurify.sanitize(e.target.innerHTML, { USE_PROFILES: { html: true } });
 
     updateText(operation, cleanHTML, sectionIndex, subsectionIndex, descriptionIndex);
+    debouncedSync();
   }
 
   const handleMouseMove = (sectionIndex, subsectionIndex, descriptionIndex) => (e) => {
@@ -244,189 +311,197 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
 
   const handlePaste = async (e) => {
     e.preventDefault();
-    const text = await navigator.clipboard.readText();
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return false;
-    selection.deleteFromDocument();
-    selection.getRangeAt(0).insertNode(document.createTextNode(text));
+    var text = '';
+    if (e.clipboardData || e.originalEvent.clipboardData) {
+      text = (e.originalEvent || e).clipboardData.getData('text/plain');
+    } else if (window.clipboardData) {
+      text = window.clipboardData.getData('Text');
+    }
+    if (document.queryCommandSupported('insertText')) {
+      document.execCommand('insertText', false, text);
+    } else {
+      document.execCommand('paste', false, text);
+    }
   }
 
   return (
     <>
-      {!resumeOnly && editable && <HoveringToolbar scale={scale} {...toolbarPos} activeIndices={activeItemIndices} />}
+      {!resumeOnly && editable && <HoveringToolbar scale={scale} {...toolbarPos} activeIndices={activeItemIndices} debouncedSync={debouncedSync} />}
       <div id="canvas" style={style.canvas} className="bg-white shadow-2xl">
-        <div id="resume" style={style.resume}>
-          <div id="headerSection" style={style.headerSection}>
-            <h1 id="headerName" style={style.headerName}>
-              <span
-                contentEditable={editable}
-                dangerouslySetInnerHTML={{ __html: resume.firstName }}
-                id="firstName"
-                onBlur={(e) => handleBlur(e, 'firstName')}
-                style={style.headerFirstName}
-                suppressContentEditableWarning
-                onPaste={handlePaste}
-              />
-              <span
-                contentEditable={editable}
-                dangerouslySetInnerHTML={{ __html: resume.lastName }}
-                id="lastName"
-                onBlur={(e) => handleBlur(e, 'lastName')}
-                style={style.headerLastName}
-                suppressContentEditableWarning
-                onPaste={handlePaste}
-              />
-            </h1>
-            {resume.contactInfo.length > 0 &&
-              <div
-                id="headerContacts"
-                style={style.headerContacts}
-                onMouseMove={handleMouseMove()}
-                onMouseLeave={handleMouseLeave()}
-              >
-                {resume.contactInfo.map((info, index) => (
-                  <div className="contactContainer" style={{ display: 'flex', alignItems: 'center' }} key={index}>
-                    <p
-                      className="headerContactsText"
-                      contentEditable={editable}
-                      dangerouslySetInnerHTML={{ __html: info }}
-                      onBlur={(e) => handleBlur(e, 'contactInfo', index)}
-                      style={style.headerContactsText}
-                      suppressContentEditableWarning
-                    />
-                    {index < resume.contactInfo.length - 1 &&
-                      <div style={style.headerContactsDivider} />
-                    }
-                  </div>
-                ))}
-              </div>
-            }
-          </div>
-          {resume.sections.map((section, sectionIndex) =>
-            section.hidden ? null : (
-              <div
-                className="section"
-                id={`${section.type.toLowerCase()}Section`}
-                key={sectionIndex}
-                style={style.section}
-                onMouseMove={handleMouseMove(sectionIndex)}
-                onMouseLeave={handleMouseLeave()}
-              >
-                <h2
-                  className="sectionTitle"
+        {
+          <div id="resume" style={style.resume}>
+            <div id="headerSection" style={style.headerSection}>
+              <h1 id="headerName" style={style.headerName}>
+                <span
                   contentEditable={editable}
-                  dangerouslySetInnerHTML={{ __html: section.name }}
-                  onBlur={(e) => handleBlur(e, 'name', sectionIndex)}
-                  style={style.sectionTitle}
+                  dangerouslySetInnerHTML={{ __html: resume.firstName }}
+                  id="firstName"
+                  onBlur={(e) => handleBlur(e, 'firstName')}
+                  style={style.headerFirstName}
                   suppressContentEditableWarning
                   onPaste={handlePaste}
                 />
-                {section.subSections.map((subSection, subSectionIndex) =>
-                  subSection.hidden ? null : (
-                    <div
-                      className="subsection"
-                      style={style.subsection}
-                      key={subSectionIndex}
-                      onMouseMove={handleMouseMove(sectionIndex, subSectionIndex)}
-                      onMouseLeave={handleMouseLeave()}
-                    >
-                      {section.type !== 'SKILLS' &&
-                        (hasTitleText(subSection) || hasSubtitleText(subSection)) &&
-                        <div>
-                          {hasTitleText(subSection) &&
-                            <div className="subsectionTitle" style={style.subsectionTitle}>
-                              <p
-                                className="subsectionTitleText1"
-                                contentEditable={editable}
-                                suppressContentEditableWarning
-                                onBlur={(e) => handleBlur(e, 'titleTextLeft', sectionIndex, subSectionIndex)}
-                                style={style.subsectionTitleText1}
-                                dangerouslySetInnerHTML={{ __html: subSection.titleTextLeft }}
-                                onPaste={handlePaste}
-                              />
-                              <p
-                                className="subsectionTitleText2"
-                                contentEditable={editable}
-                                suppressContentEditableWarning
-                                onBlur={(e) => handleBlur(e, 'titleTextRight', sectionIndex, subSectionIndex)}
-                                style={style.subsectionTitleText2}
-                                dangerouslySetInnerHTML={{ __html: subSection.titleTextRight }}
-                                onPaste={handlePaste}
-                              />
-                            </div>
-                          }
-                          {hasSubtitleText(subSection) &&
-                            <div className="subsectionSubtitle" style={style.subsectionSubtitle}>
-                              <p
-                                className="subsectionSubtitleText1"
-                                contentEditable={editable}
-                                suppressContentEditableWarning
-                                onBlur={(e) => handleBlur(e, 'subtitleTextLeft', sectionIndex, subSectionIndex)}
-                                style={style.subsectionSubtitleText1}
-                                dangerouslySetInnerHTML={{ __html: subSection.subtitleTextLeft }}
-                                onPaste={handlePaste}
-                              />
-                              <p
-                                className="subsectionSubtitleText2"
-                                contentEditable={editable}
-                                suppressContentEditableWarning
-                                onBlur={(e) => handleBlur(e, 'subtitleTextRight', sectionIndex, subSectionIndex)}
-                                style={style.subsectionSubtitleText2}
-                                dangerouslySetInnerHTML={{ __html: subSection.subtitleTextRight }}
-                                onPaste={handlePaste}
-                              />
-                            </div>
-                          }
-                        </div>
+                <span
+                  contentEditable={editable}
+                  dangerouslySetInnerHTML={{ __html: resume.lastName }}
+                  id="lastName"
+                  onBlur={(e) => handleBlur(e, 'lastName')}
+                  style={style.headerLastName}
+                  suppressContentEditableWarning
+                  onPaste={handlePaste}
+                />
+              </h1>
+              {resume.contactInfo.length > 0 &&
+                <div
+                  id="headerContacts"
+                  style={style.headerContacts}
+                  onMouseMove={handleMouseMove()}
+                  onMouseLeave={handleMouseLeave()}
+                >
+                  {resume.contactInfo.map((info, index) => (
+                    <div className="contactContainer" style={{ display: 'flex', alignItems: 'center' }} key={index}>
+                      <p
+                        className="headerContactsText"
+                        contentEditable={editable}
+                        dangerouslySetInnerHTML={{ __html: info }}
+                        onBlur={(e) => handleBlur(e, 'contactInfo', index)}
+                        style={style.headerContactsText}
+                        suppressContentEditableWarning
+                      />
+                      {index < resume.contactInfo.length - 1 &&
+                        <div style={style.headerContactsDivider} />
                       }
-                      <div style={style.subsectionBody}>
-                        {subSection.descriptions.map((desc, descriptionIndex) =>
-                          desc.hidden ? null : desc.type === "SPLIT" ? (
-                            <div
-                              className="subsectionBodySplit"
-                              onMouseMove={handleMouseMove(sectionIndex, subSectionIndex, descriptionIndex)}
-                              onMouseLeave={handleMouseLeave()}
-                              style={style.subsectionBodySplit}
-                            >
-                              <p
-                                className="subsectionBodySplitText1"
-                                contentEditable={editable}
-                                dangerouslySetInnerHTML={{ __html: desc.valueLeft }}
-                                onBlur={(e) => handleBlur(e, 'valueLeft', sectionIndex, subSectionIndex, descriptionIndex)}
-                                style={style.subsectionBodySplitText1}
-                                suppressContentEditableWarning
-                                onPaste={handlePaste}
-                              />
-                              <p
-                                className="subsectionBodySplitText2"
-                                contentEditable={editable}
-                                dangerouslySetInnerHTML={{ __html: desc.valueRight }}
-                                onBlur={(e) => handleBlur(e, 'valueRight', sectionIndex, subSectionIndex, descriptionIndex)}
-                                style={style.subsectionBodySplitText2}
-                                suppressContentEditableWarning
-                                onPaste={handlePaste}
-                              />
-                            </div>
-                          ) : (
-                            desc.value !== '' &&
-                            <div
-                              className="subsectionTextArea"
-                              contentEditable={editable}
-                              suppressContentEditableWarning
-                              onBlur={(e) => handleBlur(e, 'value', sectionIndex, subSectionIndex, descriptionIndex)}
-                              dangerouslySetInnerHTML={{ __html: desc.value }}
-                              style={style.subsectionTextArea}
-                              onPaste={handlePaste}
-                            />
-                          ))}
-                      </div>
                     </div>
-                  )
-                )}
-              </div>
-            )
-          )}
-        </div>
+                  ))}
+                </div>
+              }
+            </div>
+            {resume.sections.map((section, sectionIndex) =>
+              section.hidden ? null : (
+                <div
+                  className="section"
+                  id={`${section.type.toLowerCase()}Section`}
+                  key={sectionIndex}
+                  style={style.section}
+                  onMouseMove={handleMouseMove(sectionIndex)}
+                  onMouseLeave={handleMouseLeave()}
+                >
+                  <h2
+                    className="sectionTitle"
+                    contentEditable={editable}
+                    dangerouslySetInnerHTML={{ __html: section.name }}
+                    onBlur={(e) => handleBlur(e, 'name', sectionIndex)}
+                    style={style.sectionTitle}
+                    suppressContentEditableWarning
+                    onPaste={handlePaste}
+                  />
+                  {section.subSections.map((subSection, subSectionIndex) =>
+                    subSection.hidden ? null : (
+                      <div
+                        className="subsection"
+                        style={style.subsection}
+                        key={subSectionIndex}
+                        onMouseMove={handleMouseMove(sectionIndex, subSectionIndex)}
+                        onMouseLeave={handleMouseLeave()}
+                      >
+                        {section.type !== 'SKILLS' &&
+                          (hasTitleText(subSection) || hasSubtitleText(subSection)) &&
+                          <div>
+                            {hasTitleText(subSection) &&
+                              <div className="subsectionTitle" style={style.subsectionTitle}>
+                                <p
+                                  className="subsectionTitleText1"
+                                  contentEditable={editable}
+                                  suppressContentEditableWarning
+                                  onBlur={(e) => handleBlur(e, 'titleTextLeft', sectionIndex, subSectionIndex)}
+                                  style={style.subsectionTitleText1}
+                                  dangerouslySetInnerHTML={{ __html: subSection.titleTextLeft }}
+                                  onPaste={handlePaste}
+                                />
+                                <p
+                                  className="subsectionTitleText2"
+                                  contentEditable={editable}
+                                  suppressContentEditableWarning
+                                  onBlur={(e) => handleBlur(e, 'titleTextRight', sectionIndex, subSectionIndex)}
+                                  style={style.subsectionTitleText2}
+                                  dangerouslySetInnerHTML={{ __html: subSection.titleTextRight }}
+                                  onPaste={handlePaste}
+                                />
+                              </div>
+                            }
+                            {hasSubtitleText(subSection) &&
+                              <div className="subsectionSubtitle" style={style.subsectionSubtitle}>
+                                <p
+                                  className="subsectionSubtitleText1"
+                                  contentEditable={editable}
+                                  suppressContentEditableWarning
+                                  onBlur={(e) => handleBlur(e, 'subtitleTextLeft', sectionIndex, subSectionIndex)}
+                                  style={style.subsectionSubtitleText1}
+                                  dangerouslySetInnerHTML={{ __html: subSection.subtitleTextLeft }}
+                                  onPaste={handlePaste}
+                                />
+                                <p
+                                  className="subsectionSubtitleText2"
+                                  contentEditable={editable}
+                                  suppressContentEditableWarning
+                                  onBlur={(e) => handleBlur(e, 'subtitleTextRight', sectionIndex, subSectionIndex)}
+                                  style={style.subsectionSubtitleText2}
+                                  dangerouslySetInnerHTML={{ __html: subSection.subtitleTextRight }}
+                                  onPaste={handlePaste}
+                                />
+                              </div>
+                            }
+                          </div>
+                        }
+                        <div style={style.subsectionBody}>
+                          {subSection.descriptions.map((desc, descriptionIndex) =>
+                            desc.hidden ? null : desc.type === "SPLIT" ? (
+                              <div
+                                className="subsectionBodySplit"
+                                onMouseMove={handleMouseMove(sectionIndex, subSectionIndex, descriptionIndex)}
+                                onMouseLeave={handleMouseLeave()}
+                                style={style.subsectionBodySplit}
+                              >
+                                <p
+                                  className="subsectionBodySplitText1"
+                                  contentEditable={editable}
+                                  dangerouslySetInnerHTML={{ __html: desc.valueLeft }}
+                                  onBlur={(e) => handleBlur(e, 'valueLeft', sectionIndex, subSectionIndex, descriptionIndex)}
+                                  style={style.subsectionBodySplitText1}
+                                  suppressContentEditableWarning
+                                  onPaste={handlePaste}
+                                />
+                                <p
+                                  className="subsectionBodySplitText2"
+                                  contentEditable={editable}
+                                  dangerouslySetInnerHTML={{ __html: desc.valueRight }}
+                                  onBlur={(e) => handleBlur(e, 'valueRight', sectionIndex, subSectionIndex, descriptionIndex)}
+                                  style={style.subsectionBodySplitText2}
+                                  suppressContentEditableWarning
+                                  onPaste={handlePaste}
+                                />
+                              </div>
+                            ) : (
+                              desc.value !== '' &&
+                              <div
+                                className="subsectionTextArea"
+                                contentEditable={editable}
+                                suppressContentEditableWarning
+                                onBlur={(e) => handleBlur(e, 'value', sectionIndex, subSectionIndex, descriptionIndex)}
+                                dangerouslySetInnerHTML={{ __html: desc.value }}
+                                style={style.subsectionTextArea}
+                                onPaste={handlePaste}
+                              />
+                            ))}
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        }
       </div>
     </>
   );

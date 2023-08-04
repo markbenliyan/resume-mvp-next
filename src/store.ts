@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 import { produce } from 'immer'
+import { db } from '../lib/firebase'
+import { doc, updateDoc } from "firebase/firestore"; 
+
 
 // Your types/interfaces here...
 
@@ -67,7 +70,7 @@ interface Store {
   updateSection: (sectionIndex: number, section: Section) => void;
   updateSubSection: (sectionIndex: number, subSectionIndex: number, subSection: SubSection) => void;
   updateDescription: (sectionIndex: number, subSectionIndex: number, descriptionIndex: number, description: Description) => void;
-  updateText: (operation: string, newValue: string, sectionIndex: number, subSectionIndex: number, descriptionIndex:number) => void;
+  updateText: (operation: string, newValue: string, sectionIndex?: number, subSectionIndex?: number, descriptionIndex?: number) => void;
   toggleSectionHidden: (sectionIndex: number) => void;
   addHandler: (sectionIndex: number, subSectionIndex?: number,  descriptionIndex?: number) => void;
   deleteHandler: (sectionIndex?: number, subSectionIndex?: number, descriptionIndex?: number) => void;
@@ -124,8 +127,20 @@ const newSection: Section = {
   hidden: false,
 };
 
+// The async function to sync with Firestore
+export async function syncWithFirestore(resumeId: string) {
+  const state = useStore.getState();
+  const resumeDocRef = doc(db, 'resumes', resumeId);
+  try {
+    // Update only the `content` field of the document
+    await updateDoc(resumeDocRef, { content: state.resume });
+  } catch (error) {
+    console.error('Error updating document: ', error);
+  }
+}
 
-const useStore = create<Store>((set) => ({
+
+export const useStore = create<Store>((set) => ({
   customFormat: {
     resumeMarginLeftRight: '30px',
     resumeMarginTopBottom: '0px',
@@ -157,9 +172,9 @@ const useStore = create<Store>((set) => ({
     firstName: "John",
     lastName: "Doe",
     contactInfo: [
-      "1234 Some St, Some City, Some Country",
-      "Phone: 123-456-7890",
-      "Email: john.doe@example.com",
+      "(123) 456-7890",
+      "john.doe@example.com",
+      "LinkedIn: Johndoe",
     ],
     sections: [
       {
@@ -322,6 +337,7 @@ const useStore = create<Store>((set) => ({
         }
         draft.resume.lastName = newValue;
       } else if (operation === 'contactInfo' && sectionIndex !== undefined) {
+        console.log('updating contact info', sectionIndex, newValue)
         if (draft.resume.contactInfo[sectionIndex] === newValue) {
           return;
         }
@@ -333,7 +349,7 @@ const useStore = create<Store>((set) => ({
           draft.resume.contactInfo[sectionIndex] = newValue;
         }
 
-      } else if (descriptionIndex !== undefined) {
+      } else if (descriptionIndex !== undefined && subSectionIndex !== undefined && sectionIndex !== undefined) {
         // If descriptionIndex is provided, we are updating a description-level field
         const targetDescription = draft.resume.sections[sectionIndex].subSections[subSectionIndex].descriptions[descriptionIndex];
         
@@ -355,7 +371,7 @@ const useStore = create<Store>((set) => ({
             targetDescription.valueRight = newValue;
           }
         }
-      } else if (subSectionIndex !== undefined) {
+      } else if (subSectionIndex !== undefined && sectionIndex !== undefined) {
         // If subSectionIndex is provided, we are updating a subsection-level field
         const targetSubsection = draft.resume.sections[sectionIndex].subSections[subSectionIndex];
         if (operation === 'titleTextLeft') {
@@ -379,7 +395,7 @@ const useStore = create<Store>((set) => ({
           }
           targetSubsection.subtitleTextRight = newValue;
         }
-      } else {
+      } else if (sectionIndex !== undefined) {
         // If only sectionIndex is provided, we are updating a section-level field
         const targetSection = draft.resume.sections[sectionIndex];
         if (targetSection.name === newValue) {
@@ -537,4 +553,3 @@ const useStore = create<Store>((set) => ({
   }),
 }));
 
-export default useStore;
