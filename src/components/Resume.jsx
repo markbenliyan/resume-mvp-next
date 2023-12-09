@@ -322,6 +322,7 @@ const Resume = ({ editable = false, resumeOnly = false, scale = 1.0 }) => {
     }
   }
 
+  console.log('toolbar pos ', toolbarPos)
   return (
     <>
       {!resumeOnly && editable && <HoveringToolbar scale={scale} {...toolbarPos} activeIndices={activeItemIndices} debouncedSync={debouncedSync} />}

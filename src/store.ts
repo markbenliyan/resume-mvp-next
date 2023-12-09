@@ -60,6 +60,7 @@ interface CustomFormat {
 
 interface Store {
   resume: Resume;
+  textResume: Resume;
   customFormat: CustomFormat;
   history: Resume[],
   future: Resume[],
@@ -297,6 +298,166 @@ export const useStore = create<Store>((set) => ({
       },
     ],
   },
+  textResume: {
+    resumeName: "John Doe Resume",
+    firstName: "John",
+    lastName: "Doe",
+    contactInfo: [
+      "1234 Some St, Some City, Some Country",
+      "Phone: 123-456-7890",
+      "Email: john.doe@example.com",
+    ],
+    sections: [
+      {
+        name: "Education",
+        type: "EDUCATION",
+        subSections: [
+          {
+            name: "University of California, Irvine",
+            titleTextLeft: "University of California, Irvine",
+            titleTextRight: "June 2020",
+            subtitleTextLeft: "Bachelor of Science, Computer Science",
+            subtitleTextRight: "Irvine, CA",
+            descriptions: [
+              {
+                type: "SPLIT",
+                valueLeft: "Achievements",
+                valueRight:
+                  "174 LSAT Score (99th Percentile) | President - Alpha Epsilon Omega | Dean's Honor List President's Scholarship at UF Levine Law (#21 US News)",
+                hidden: false,
+              },
+            ],
+            hidden: false,
+          },
+        ],
+        hidden: false,
+      },
+      {
+        name: "Experience",
+        type: "EXPERIENCE",
+        subSections: [
+          {
+            name: "Some Company",
+            titleTextLeft: "Some Company",
+            titleTextRight: "June 2020 - Present",
+            subtitleTextLeft: "Software Developer",
+            subtitleTextRight: "Irvine, CA",
+            descriptions: [
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+            ],
+            hidden: false,
+          },
+          {
+            name: "Some Company",
+            titleTextLeft: "Some Company",
+            titleTextRight: "June 2020 - Present",
+            subtitleTextLeft: "Software Developer",
+            subtitleTextRight: "Irvine, CA",
+            descriptions: [
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+            ],
+            hidden: false,
+          }
+        ],
+        hidden: false,
+      },
+      {
+        name: "Skills",
+        type: "SKILLS",
+        subSections: [
+          {
+            name: "Languages and Frameworks",
+            titleTextLeft: "",
+            titleTextRight: "",
+            subtitleTextLeft: "",
+            subtitleTextRight: "",
+            descriptions: [
+              {
+                type: "SPLIT",
+                valueLeft: "Languages",
+                valueRight: "JavaScript, Python, Java, C++, C#, HTML, CSS",
+                hidden: false,
+              },
+              {
+                type: "SPLIT",
+                valueLeft: "Frameworks",
+                valueRight: "React, Node.js, Express, Flask, Django, Spring Boot, .NET, Bootstrap",
+                hidden: false,
+              },
+              {
+                type: "SPLIT",
+                valueLeft: "Databases",
+                valueRight: "MySQL, MongoDB, PostgreSQL, SQLite",
+                hidden: false,
+              },
+            ],
+            hidden: false,
+          },
+        ],
+        hidden: false,
+      },
+      {
+        name: "Projects",
+        type: "PROJECTS",
+        subSections: [
+          {
+            name: "Some Project",
+            titleTextLeft: "Some Project",
+            titleTextRight: "June 2020 - Present",
+            subtitleTextLeft: "Python, PyGame, NEAT-Python",
+            subtitleTextRight: "View",
+            descriptions: [
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+              {
+                type: "BULLET",
+                value: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+                hidden: false,
+              },
+            ],
+            hidden: false,
+          },
+        ],
+        hidden: false,
+      },
+    ],
+  },
   history: [],
   future: [],
   // setResume may not be updated
@@ -326,7 +487,14 @@ export const useStore = create<Store>((set) => ({
     const oldState = produce(state, draft => {});
 
     return produce(state, draft => {
-      if (operation === 'firstName') {
+      if (operation === 'fullName') {
+        const [firstName, lastName] = newValue.split(' ');
+        if (draft.resume.firstName === firstName && draft.resume.lastName === lastName) {
+          return;
+        }
+        draft.resume.firstName = firstName;
+        draft.resume.lastName = lastName;
+      } else if (operation === 'firstName') {
         if (draft.resume.firstName === newValue) {
           return;
         }
